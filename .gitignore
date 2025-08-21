@@ -1,0 +1,16 @@
+# Исполняемые файлы
+skill
+cmd/skill/skill
+
+# IDE
+.idea/
+
+# Временные файлы Go
+*.tmp
+*.temp
+
+# Логи
+*.log
+
+# Зависимости
+vendor/
