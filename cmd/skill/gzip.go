@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // compressWriter реализует интерфейс http.ResponseWriter и позволяет прозрачно для сервера
@@ -68,4 +69,31 @@ func (c *compressReader) Close() error {
 		return err
 	}
 	return c.zr.Close()
+}
+
+// gzipMiddleware включает поддержку приёма/отдачи gzip, если клиент это запрашивает
+func gzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ow := w
+
+		// клиент может принимать gzip
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			cw := newCompressWriter(w)
+			ow = cw
+			defer cw.Close()
+		}
+
+		// клиент прислал gzip
+		if strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+			cr, err := newCompressReader(r.Body)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			r.Body = cr
+			defer cr.Close()
+		}
+
+		h.ServeHTTP(ow, r)
+	}
 }

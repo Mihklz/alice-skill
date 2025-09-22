@@ -7,8 +7,9 @@ import (
 
 // неэкспортированная переменная flagRunAddr содержит адрес и порт для запуска сервера
 var (
-	flagRunAddr  string
-	flagLogLevel string
+	flagRunAddr     string
+	flagLogLevel    string
+	flagDatabaseURI string
 )
 
 // parseFlags обрабатывает аргументы командной строки
@@ -20,6 +21,9 @@ func parseFlags() {
 	// регистрируем переменную flagLogLevel
 	// как аргумент -l со значением info по умолчанию
 	flag.StringVar(&flagLogLevel, "l", "info", "log level")
+	// регистрируем переменную flagDatabaseURI
+	// как аргумент -d без значения по умолчанию
+	flag.StringVar(&flagDatabaseURI, "d", "", "database connection URI (DSN)")
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 
@@ -34,5 +38,10 @@ func parseFlags() {
 	// даже если он был передан через аргумент командной строки
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 		flagLogLevel = envLogLevel
+	}
+	// если в переменной окружения DATABASE_URI присутствует непустое значение,
+	// переопределим URI подключения к БД
+	if envDB := os.Getenv("DATABASE_URI"); envDB != "" {
+		flagDatabaseURI = envDB
 	}
 }
